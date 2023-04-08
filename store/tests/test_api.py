@@ -39,6 +39,15 @@ class BooksApiTestCase(APITestCase):
             [self.book1, self.book2, self.book3], many=True).data
         self.assertEqual(serialized_data, response.data)  # type:ignore
 
+    def test_get_single_book(self):
+        url = reverse('book-detail', kwargs={'pk': self.book2.pk})
+        response = self.client.get(url)
+        book = Book.objects.get(pk=self.book2.pk)
+
+        self.assertEqual(response.data['name'], book.name)  # type:ignore
+        self.assertEqual(response.data['author_name'],  # type:ignore
+                         book.author_name)
+
     def test_create(self):
         url = reverse('book-list')
 
