@@ -117,6 +117,7 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         with self.assertRaises(Book.DoesNotExist):
             Book.objects.get(pk=self.book1.pk)
+        self.assertEqual(Book.objects.count(), 2)
 
     def test_partial_update(self):
         url = reverse('book-detail', kwargs={'pk': self.book1.pk})
