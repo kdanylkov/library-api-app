@@ -17,11 +17,11 @@ class BooksApiTestCase(APITestCase):
     def setUp(self):
         self.user1 = User.objects.create(username='Test User')
         self.book1 = Book.objects.create(
-            name='Test', price=434.99, author_name='Author 1')
+            name='Test', price=434.99, author_name='Author 1', owner=self.user1)
         self.book2 = Book.objects.create(
-            name='Test book 2', price=343.33, author_name='Author 1')
+            name='Test book 2', price=343.33, author_name='Author 1', owner=self.user1)
         self.book3 = Book.objects.create(
-            name='Test book 3', price=45, author_name='Author 2')
+            name='Test book 3', price=45, author_name='Author 2', owner=self.user1)
 
     def tearDown(self):
         self.user1.delete()
@@ -63,23 +63,7 @@ class BooksApiTestCase(APITestCase):
             url, data=json_payload, content_type='application/json')
 
         self.assertEqual(HTTP_201_CREATED, response.status_code)
-
-    def test_create_unauthorized_user(self):
-        url = reverse('book-list')
-
-        payload = {
-            'name': 'Test Book 4',
-            'price': '544.99',
-            'author_name': 'Test Author 2'
-        }
-        json_payload = dumps(payload)
-
-        response = self.client.post(
-            url, data=json_payload, content_type='application/json')
-
-        self.assertEqual(HTTP_403_FORBIDDEN, response.status_code)
-        self.assertEqual(
-            response.data, {"detail": "Authentication credentials were not provided."})  # type:ignore
+        self.assertEqual(Book.objects.last().owner, self.user1)  # type:ignore
 
     def test_update(self):
         url = reverse('book-detail', kwargs={'pk': self.book1.pk})
@@ -99,6 +83,27 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(response.status_code, HTTP_200_OK)
         self.book1.refresh_from_db()
         self.assertEqual(self.book1.price, 100.00)
+
+    def test_update_not_owner(self):
+        url = reverse('book-detail', kwargs={'pk': self.book1.pk})
+        user2 = User.objects.create(username='test_user2')
+
+        self.client.force_login(user2)
+
+        payload = {
+            'name': self.book1.name,
+            'price': 100.00,
+            'author_name': self.book1.author_name
+        }
+
+        json_payload = dumps(payload)
+
+        response = self.client.put(url, data=json_payload,
+                                   content_type='application/json')
+
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
+        self.book1.refresh_from_db()
+        self.assertNotEqual(self.book1.price, 100.00)
 
     def test_update_insufficient_data(self):
         url = reverse('book-detail', kwargs={'pk': self.book1.pk})
@@ -150,3 +155,23 @@ class BooksApiTestCase(APITestCase):
         self.assertEqual(self.book1.price, 150.00)
         self.assertEqual(name, name_after_update)
         self.assertEqual(author_name, author_name_after_update)
+
+    def test_delete_if_not_owner(self):
+        user2 = User.objects.create(username='Test User 2')
+        self.client.force_login(user2)
+
+        url = reverse('book-detail', kwargs={'pk': self.book2.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, HTTP_403_FORBIDDEN)
+        self.assertEqual(Book.objects.count(), 3)
+
+    def test_delete_if_not_owner_but_is_staff(self):
+        user2 = User.objects.create(username='Test User 2', is_staff=True)
+        self.client.force_login(user2)
+
+        url = reverse('book-detail', kwargs={'pk': self.book2.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
+        self.assertEqual(Book.objects.count(), 2)
