@@ -23,14 +23,16 @@ class BooksSerializerTestCase(TestCase):
                 'name': 'Test',
                 'price': '434.99',
                 'author_name': 'Test Author',
-                'owner': user.pk
+                'owner': user.pk,
+                'readers': []
             },
             {
                 'id': book2.pk,
                 'name': 'Test book 2',
                 'price': '343.33',
                 'author_name': 'Test Author',
-                'owner': user.pk
+                'owner': user.pk,
+                'readers': []
             }
         ]
 

@@ -27,7 +27,7 @@ class UserBookRelation(models.Model):
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
     like = models.BooleanField(default=False)
     in_bookmarks = models.BooleanField(default=False)
-    rate = models.PositiveSmallIntegerField(choices=RATING_CHOICES)
+    rate = models.PositiveSmallIntegerField(choices=RATING_CHOICES, null=True)
 
     class Meta:
         unique_together = ('user', 'book')

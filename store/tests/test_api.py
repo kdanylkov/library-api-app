@@ -9,7 +9,9 @@ from rest_framework.test import APITestCase
 from rest_framework.utils.json import dumps
 
 from store.models import Book
+from store.models import UserBookRelation
 from store.serializer import BooksSerializer
+from store.serializer import UserBookRelationsSerializer
 
 
 class BooksApiTestCase(APITestCase):
@@ -175,3 +177,38 @@ class BooksApiTestCase(APITestCase):
 
         self.assertEqual(response.status_code, HTTP_204_NO_CONTENT)
         self.assertEqual(Book.objects.count(), 2)
+
+
+class BookRelationApiTestCase(APITestCase):
+
+    def setUp(self):
+        self.user1 = User.objects.create(username='Test User')
+        self.book1 = Book.objects.create(
+            name='Test', price=434.99, author_name='Author 1', owner=self.user1)
+        self.book2 = Book.objects.create(
+            name='Test book 2', price=343.33, author_name='Author 1', owner=self.user1)
+        self.book3 = Book.objects.create(
+            name='Test book 3', price=45, author_name='Author 2', owner=self.user1)
+
+    def tearDown(self):
+        self.user1.delete()
+        self.book1.delete()
+        self.book2.delete()
+        self.book3.delete()
+
+    def test_like_and_bookmark(self):
+        url = reverse('userbookrelation-detail', args=(self.book1.pk,))
+        payload = {
+            'like': True
+        }
+
+        json_payload = dumps(payload)
+
+        self.client.force_login(self.user1)
+        response = self.client.patch(
+            url, data=json_payload, content_type='application/json')
+
+        self.assertEqual(HTTP_200_OK, response.status_code)
+        relation = UserBookRelation.objects.get(
+            user=self.user1, book=self.book1)
+        self.assertTrue(relation.like)
