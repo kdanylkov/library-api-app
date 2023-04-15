@@ -1,21 +1,40 @@
-from django.contrib.auth.models import User
 from django.test import TestCase
+from django.contrib.auth.models import User
+from django.db.models import Count, Case, When
 
-from store.models import Book
+from store.models import Book, UserBookRelation
 from store.serializer import BooksSerializer
 
 
 class BooksSerializerTestCase(TestCase):
 
     def test_serializer(self):
-        user = User.objects.create(username='test username')
+        user1 = User.objects.create_user(username='testuser1')
+        user2 = User.objects.create_user(username='testuser2')
+        user3 = User.objects.create_user(username='testuser3')
 
         book1 = Book.objects.create(
-            name='Test', price=434.99, author_name='Test Author', owner=user)
+            name='Test', price=434.99, author_name='Test Author')
         book2 = Book.objects.create(
-            name='Test book 2', price=343.33, author_name='Test Author', owner=user)
+            name='Test book 2', price=343.33, author_name='Test Author')
 
-        data = BooksSerializer([book1, book2], many=True).data
+        UserBookRelation.objects.create(book=book1, user=user1, like=True)
+        UserBookRelation.objects.create(book=book1, user=user2, like=True)
+        UserBookRelation.objects.create(book=book1, user=user3, like=True)
+
+        UserBookRelation.objects.create(book=book2, user=user1, like=True)
+        UserBookRelation.objects.create(book=book2, user=user2, like=True)
+        UserBookRelation.objects.create(book=book2, user=user3, like=False)
+
+        books = Book.objects.all().annotate(
+                annotated_likes=Count(
+                    Case(
+                        When(userbookrelation__like=True, then=1)
+                        )
+                    )
+                ).order_by('id')
+
+        data = BooksSerializer(books, many=True).data
 
         expected_data = [
             {
@@ -23,16 +42,16 @@ class BooksSerializerTestCase(TestCase):
                 'name': 'Test',
                 'price': '434.99',
                 'author_name': 'Test Author',
-                'owner': user.pk,
-                'readers': []
+                'likes_count': 3,
+                'annotated_likes': 3
             },
             {
                 'id': book2.pk,
                 'name': 'Test book 2',
                 'price': '343.33',
                 'author_name': 'Test Author',
-                'owner': user.pk,
-                'readers': []
+                'likes_count': 2,
+                'annotated_likes': 2
             }
         ]
 

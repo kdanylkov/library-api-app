@@ -1,3 +1,4 @@
+from django.db.models import Count, Case, When
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
@@ -15,7 +16,14 @@ from store.permissions import IsOwnerOrStaffOrReadOnly
 
 
 class BookViewSet(ModelViewSet):
-    queryset = Book.objects.all()
+    queryset = Book.objects.all().annotate(
+                annotated_likes=Count(
+                    Case(
+                        When(userbookrelation__like=True, then=1)
+                        )
+                    )
+                ).order_by('id')
+
     permission_classes = [IsOwnerOrStaffOrReadOnly]
     serializer_class = BooksSerializer
 
