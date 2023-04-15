@@ -9,9 +9,21 @@ from store.views import get_books_queryset
 class BooksSerializerTestCase(TestCase):
 
     def test_serializer(self):
-        user1 = User.objects.create_user(username='testuser1')
-        user2 = User.objects.create_user(username='testuser2')
-        user3 = User.objects.create_user(username='testuser3')
+        user1 = User.objects.create_user(
+                username='testuser1',
+                first_name='first_name1',
+                last_name='last_name1'
+                )
+        user2 = User.objects.create_user(
+                username='testuser2',
+                first_name='first_name2',
+                last_name='last_name2'
+                )
+        user3 = User.objects.create_user(
+                username='testuser3',
+                first_name='first_name3',
+                last_name='last_name3'
+                )
 
         book1 = Book.objects.create(
             name='Test', price=434.99, author_name='Test Author', owner=user1)
@@ -43,7 +55,21 @@ class BooksSerializerTestCase(TestCase):
                 'author_name': 'Test Author',
                 'likes': 3,
                 'rating': '4.67',
-                'owner_name': 'testuser1'
+                'owner_name': 'testuser1',
+                'readers': [
+                    {
+                        'first_name': 'first_name1',
+                        'last_name': 'last_name1'
+                        },
+                    {
+                        'first_name': 'first_name2',
+                        'last_name': 'last_name2'
+                        },
+                    {
+                        'first_name': 'first_name3',
+                        'last_name': 'last_name3'
+                        }
+                    ]
             },
             {
                 'id': book2.pk,
@@ -52,7 +78,22 @@ class BooksSerializerTestCase(TestCase):
                 'author_name': 'Test Author',
                 'likes': 2,
                 'rating': '3.50',
-                'owner_name': 'testuser2'
+                'owner_name': 'testuser2',
+                'readers': [
+                    {
+                        'first_name': 'first_name1',
+                        'last_name': 'last_name1'
+                        },
+                    {
+                        'first_name': 'first_name2',
+                        'last_name': 'last_name2'
+                        },
+                    {
+                        'first_name': 'first_name3',
+                        'last_name': 'last_name3'
+                        }
+
+                    ]
             }
         ]
 
