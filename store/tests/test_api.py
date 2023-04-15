@@ -11,7 +11,6 @@ from rest_framework.utils.json import dumps
 from store.models import Book
 from store.models import UserBookRelation
 from store.serializer import BooksSerializer
-from store.serializer import UserBookRelationsSerializer
 
 
 class BooksApiTestCase(APITestCase):
@@ -181,20 +180,17 @@ class BooksApiTestCase(APITestCase):
 
 class BookRelationApiTestCase(APITestCase):
 
-    def setUp(self):
-        self.user1 = User.objects.create(username='Test User')
-        self.book1 = Book.objects.create(
-            name='Test', price=434.99, author_name='Author 1', owner=self.user1)
-        self.book2 = Book.objects.create(
-            name='Test book 2', price=343.33, author_name='Author 1', owner=self.user1)
-        self.book3 = Book.objects.create(
-            name='Test book 3', price=45, author_name='Author 2', owner=self.user1)
-
-    def tearDown(self):
-        self.user1.delete()
-        self.book1.delete()
-        self.book2.delete()
-        self.book3.delete()
+    @classmethod
+    def setUpTestData(cls):
+        cls.user1 = User.objects.create(username='Test User')
+        cls.book1 = Book.objects.create(
+            name='Test', price=434.99, author_name='Author 1', owner=cls.user1)
+        cls.book2 = Book.objects.create(
+            name='Test book 2', price=343.33, author_name='Author 1',
+            owner=cls.user1)
+        cls.book3 = Book.objects.create(
+            name='Test book 3', price=45, author_name='Author 2',
+            owner=cls.user1)
 
     def test_like_and_bookmark(self):
         url = reverse('userbookrelation-detail', args=(self.book1.pk,))
@@ -209,6 +205,59 @@ class BookRelationApiTestCase(APITestCase):
             url, data=json_payload, content_type='application/json')
 
         self.assertEqual(HTTP_200_OK, response.status_code)
+
         relation = UserBookRelation.objects.get(
             user=self.user1, book=self.book1)
+
         self.assertTrue(relation.like)
+
+        payload = {
+            'in_bookmarks': True
+        }
+
+        json_payload = dumps(payload)
+
+        response = self.client.patch(
+            url, data=json_payload, content_type='application/json')
+
+        self.assertEqual(HTTP_200_OK, response.status_code)
+        relation.refresh_from_db()
+        self.assertTrue(relation.in_bookmarks, True)
+
+    def test_rate(self):
+        url = reverse('userbookrelation-detail', args=(self.book1.pk,))
+        payload = {
+            'rate': 4
+        }
+
+        json_payload = dumps(payload)
+
+        self.client.force_login(self.user1)
+        response = self.client.patch(
+            url, data=json_payload, content_type='application/json')
+
+        self.assertEqual(HTTP_200_OK, response.status_code)
+
+        relation = UserBookRelation.objects.get(
+            user=self.user1, book=self.book1)
+
+        self.assertEqual(relation.rate, 4)
+
+    def test_rate_wrong(self):
+        url = reverse('userbookrelation-detail', args=(self.book1.pk,))
+        payload = {
+            'rate': 6
+        }
+
+        json_payload = dumps(payload)
+
+        self.client.force_login(self.user1)
+        response = self.client.patch(
+            url, data=json_payload, content_type='application/json')
+
+        self.assertEqual(HTTP_400_BAD_REQUEST, response.status_code)
+
+        relation = UserBookRelation.objects.get(
+            user=self.user1, book=self.book1)
+
+        self.assertEqual(relation.rate, None)
