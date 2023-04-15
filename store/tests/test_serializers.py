@@ -1,6 +1,6 @@
 from django.test import TestCase
 from django.contrib.auth.models import User
-from django.db.models import Count, Case, When
+from django.db.models import Count, Case, When, Avg
 
 from store.models import Book, UserBookRelation
 from store.serializer import BooksSerializer
@@ -18,12 +18,17 @@ class BooksSerializerTestCase(TestCase):
         book2 = Book.objects.create(
             name='Test book 2', price=343.33, author_name='Test Author')
 
-        UserBookRelation.objects.create(book=book1, user=user1, like=True)
-        UserBookRelation.objects.create(book=book1, user=user2, like=True)
-        UserBookRelation.objects.create(book=book1, user=user3, like=True)
+        UserBookRelation.objects.create(book=book1, user=user1, like=True,
+                                        rate=5)
+        UserBookRelation.objects.create(book=book1, user=user2, like=True,
+                                        rate=5)
+        UserBookRelation.objects.create(book=book1, user=user3, like=True,
+                                        rate=4)
 
-        UserBookRelation.objects.create(book=book2, user=user1, like=True)
-        UserBookRelation.objects.create(book=book2, user=user2, like=True)
+        UserBookRelation.objects.create(book=book2, user=user1, like=True,
+                                        rate=4)
+        UserBookRelation.objects.create(book=book2, user=user2, like=True,
+                                        rate=3)
         UserBookRelation.objects.create(book=book2, user=user3, like=False)
 
         books = Book.objects.all().annotate(
@@ -31,7 +36,8 @@ class BooksSerializerTestCase(TestCase):
                     Case(
                         When(userbookrelation__like=True, then=1)
                         )
-                    )
+                    ),
+                rating=Avg('userbookrelation__rate')
                 ).order_by('id')
 
         data = BooksSerializer(books, many=True).data
@@ -43,7 +49,8 @@ class BooksSerializerTestCase(TestCase):
                 'price': '434.99',
                 'author_name': 'Test Author',
                 'likes_count': 3,
-                'annotated_likes': 3
+                'annotated_likes': 3,
+                'rating': '4.67'
             },
             {
                 'id': book2.pk,
@@ -51,7 +58,8 @@ class BooksSerializerTestCase(TestCase):
                 'price': '343.33',
                 'author_name': 'Test Author',
                 'likes_count': 2,
-                'annotated_likes': 2
+                'annotated_likes': 2,
+                'rating': '3.50'
             }
         ]
 
