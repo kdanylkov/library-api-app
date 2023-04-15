@@ -12,4 +12,6 @@ router.register(r'book-relation', UserBookRelationViewSet)
 
 urlpatterns = router.urls
 
-urlpatterns.append(path('auth/', oauth_view, name='auth'))
+urlpatterns += [
+        path('auth/', oauth_view, name='auth'),
+        ]
