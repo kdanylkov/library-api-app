@@ -15,6 +15,8 @@ from django.urls import reverse_lazy
 from dotenv import load_dotenv
 from os import getenv
 
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -23,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-zk&lv8z=b7@n-_ijsy_00uu=*2(8=l+@-l^w@=+_)_gmrvbwv('
+SECRET_KEY = getenv('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -148,7 +150,6 @@ SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
 SOCIAL_AUTH_GITHUB_KEY = 'c6eb66c0ce1febca8f29'
 
-load_dotenv()
 SOCIAL_AUTH_GITHUB_SECRET = getenv('GITHUB_AUTH_TOKEN')
 
 INTERNAL_IPS = [
