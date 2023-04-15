@@ -47,7 +47,7 @@ class BooksApiTestCase(APITestCase):
 
         self.assertEqual(serialized_data, response.data)
         self.assertIn('rating', response.json()[0].keys())
-        self.assertIn('annotated_likes', response.json()[0].keys())
+        self.assertIn('likes', response.json()[0].keys())
 
     def test_get_filter(self):
         url = reverse('book-list')

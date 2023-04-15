@@ -4,6 +4,7 @@ from django.db.models import Count, Case, When, Avg
 
 from store.models import Book, UserBookRelation
 from store.serializer import BooksSerializer
+from store.views import get_books_queryset
 
 
 class BooksSerializerTestCase(TestCase):
@@ -31,15 +32,7 @@ class BooksSerializerTestCase(TestCase):
                                         rate=3)
         UserBookRelation.objects.create(book=book2, user=user3, like=False)
 
-        books = Book.objects.all().annotate(
-                annotated_likes=Count(
-                    Case(
-                        When(userbookrelation__like=True, then=1)
-                        )
-                    ),
-                rating=Avg('userbookrelation__rate')
-                ).order_by('id')
-
+        books = get_books_queryset()
         data = BooksSerializer(books, many=True).data
 
         expected_data = [
@@ -48,8 +41,7 @@ class BooksSerializerTestCase(TestCase):
                 'name': 'Test',
                 'price': '434.99',
                 'author_name': 'Test Author',
-                'likes_count': 3,
-                'annotated_likes': 3,
+                'likes': 3,
                 'rating': '4.67'
             },
             {
@@ -57,8 +49,7 @@ class BooksSerializerTestCase(TestCase):
                 'name': 'Test book 2',
                 'price': '343.33',
                 'author_name': 'Test Author',
-                'likes_count': 2,
-                'annotated_likes': 2,
+                'likes': 2,
                 'rating': '3.50'
             }
         ]

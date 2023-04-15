@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import include
 from django.urls import path
 from django.urls import re_path
+from django.conf import settings
 
 
 urlpatterns = [
@@ -24,3 +25,8 @@ urlpatterns = [
     re_path('', include('social_django.urls', namespace='social')),
     path('', include('store.urls')),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path('__debug__/', include('debug_toolbar.urls')),
+    ]

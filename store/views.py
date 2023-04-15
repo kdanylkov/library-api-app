@@ -17,7 +17,7 @@ from store.permissions import IsOwnerOrStaffOrReadOnly
 
 def get_books_queryset():
     return Book.objects.all().annotate(
-                annotated_likes=Count(
+                likes=Count(
                     Case(
                         When(userbookrelation__like=True, then=1)
                         )
