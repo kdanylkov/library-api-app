@@ -23,7 +23,7 @@ def get_books_queryset():
                         )
                     ),
                 rating=Avg('userbookrelation__rate')
-                ).order_by('id')
+                ).select_related('owner').order_by('id')
 
 
 class BookViewSet(ModelViewSet):

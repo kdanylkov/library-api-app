@@ -1,5 +1,3 @@
-from json import loads
-from django.db.models import Count, Case, When, Avg
 from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework.status import HTTP_200_OK
