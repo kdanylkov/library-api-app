@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 
 from django.urls import reverse_lazy
+from dotenv import load_dotenv
+from os import getenv
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -145,7 +147,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
 SOCIAL_AUTH_GITHUB_KEY = 'c6eb66c0ce1febca8f29'
-SOCIAL_AUTH_GITHUB_SECRET = 'acb3e1f8819c3324255e2774a7f9fcbb905126e6'
+
+load_dotenv()
+SOCIAL_AUTH_GITHUB_SECRET = getenv('GITHUB_AUTH_TOKEN')
 
 INTERNAL_IPS = [
         '127.0.0.1',
