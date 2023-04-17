@@ -1,4 +1,5 @@
 from django.db.models import Count, Case, When, Avg
+from django.db.models import Prefetch
 from django.shortcuts import render
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.filters import OrderingFilter
@@ -7,7 +8,7 @@ from rest_framework.mixins import UpdateModelMixin
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.viewsets import ModelViewSet
-
+from django.contrib.auth.models import User
 from .models import Book
 from .models import UserBookRelation
 from .serializer import BooksSerializer
@@ -16,15 +17,25 @@ from store.permissions import IsOwnerOrStaffOrReadOnly
 
 
 def get_books_queryset():
-    return Book.objects.all().annotate(
+    return Book.objects.only(
+            'id',
+            'name',
+            'price',
+            'author_name',
+            'owner__username',
+            ).annotate(
                 likes=Count(
                     Case(
                         When(userbookrelation__like=True, then=1)
                         )
                     ),
                 rating=Avg('userbookrelation__rate')
-                ).select_related('owner').prefetch_related(
-                        'readers').order_by('id')
+                ).select_related(
+                        'owner').prefetch_related(
+                        Prefetch(
+                            'readers',
+                            queryset=User.objects.only('first_name',
+                                                       'last_name'))).order_by('id')
 
 
 class BookViewSet(ModelViewSet):
