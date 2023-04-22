@@ -12,10 +12,10 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 from pathlib import Path
 
 from django.urls import reverse_lazy
-from dotenv import load_dotenv
-from os import getenv
+from environs import Env
 
-load_dotenv()
+env = Env()
+env.read_env()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -25,16 +25,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = getenv('DJANGO_SECRET_KEY')
+SECRET_KEY = env.str('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-        'localhost',
-        '167.172.166.217'
-        ]
-
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS')
 
 # Application definition
 
@@ -94,15 +90,8 @@ WSGI_APPLICATION = 'books.wsgi.application'
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'booksdb',
-        'USER': 'books_user',
-        'PASSWORD': '1232',
-        'HOST': 'localhost',
-        'PORT': '',
+    'default': env.dj_db_url('DATABASE_URL')
     }
-}
 
 
 # Password validation
@@ -155,7 +144,7 @@ SOCIAL_AUTH_JSONFIELD_ENABLED = True
 
 SOCIAL_AUTH_GITHUB_KEY = 'c6eb66c0ce1febca8f29'
 
-SOCIAL_AUTH_GITHUB_SECRET = getenv('GITHUB_AUTH_TOKEN')
+SOCIAL_AUTH_GITHUB_SECRET = env.str('SOCIAL_AUTH_GITHUB_SECRET')
 
 INTERNAL_IPS = [
         '127.0.0.1',
